@@ -1,2 +1,7 @@
 
-ROADMAP.md
+.env*.local
+.next
+node_modules
+out
+dist
+*.tsbuildinfo
