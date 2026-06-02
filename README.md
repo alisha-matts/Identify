@@ -36,6 +36,21 @@ http://127.0.0.1:3000/api/auth/callback/spotify
 
 Listening data is intentionally not fetched until Phase 3.
 
+## Phase 3
+
+Implemented:
+
+- Spotify top tracks fetching from `/me/top/tracks`
+- Spotify top artists fetching from `/me/top/artists`
+- 25-track and 15-artist limits
+- Last month, Last 6 months, and Last year timeframe selector
+- Timeframe mapping to `short_term`, `medium_term`, and `long_term`
+- Dashboard data display with track and artist images
+- Dashboard loading skeletons
+
+Audio feature analysis and AI identity generation are intentionally not
+implemented until later phases.
+
 ## Local Setup
 
 Install dependencies:
