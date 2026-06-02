@@ -4,7 +4,27 @@ import { SpotifyLoginButton } from "@/components/spotify-login-button";
 
 const signals = ["Dreamy", "Kinetic", "Nostalgic", "Introspective"];
 
-export default function Home() {
+const authErrorMessages: Record<string, string> = {
+  access_denied: "Spotify authorization was canceled.",
+  invalid_state: "The Spotify login session expired. Try signing in again.",
+  missing_code: "Spotify did not return an authorization code.",
+  missing_spotify_configuration:
+    "Spotify credentials are missing. Check your .env.local file.",
+  session_expired: "Your Spotify session expired. Sign in again to continue.",
+  token_exchange_failed:
+    "Spotify login started, but the token exchange failed. Check your redirect URI."
+};
+
+type HomeProps = {
+  searchParams?: {
+    auth_error?: string;
+  };
+};
+
+export default function Home({ searchParams }: HomeProps) {
+  const authError = searchParams?.auth_error;
+  const authErrorMessage = authError ? authErrorMessages[authError] : undefined;
+
   return (
     <main className="min-h-screen overflow-hidden">
       <SiteHeader />
@@ -14,6 +34,12 @@ export default function Home() {
           <p className="mb-5 inline-flex rounded-full border border-white/15 bg-white/[0.08] px-4 py-2 text-sm font-medium text-mist shadow-glow backdrop-blur">
             Spotify identity analysis
           </p>
+
+          {authErrorMessage ? (
+            <div className="mb-5 rounded-lg border border-pulse/40 bg-pulse/[0.12] px-4 py-3 text-sm leading-6 text-white">
+              {authErrorMessage}
+            </div>
+          ) : null}
 
           <h1 className="text-balance text-5xl font-semibold leading-[0.96] tracking-normal text-white sm:text-6xl lg:text-7xl">
             Find the listening identity hiding in your music.
@@ -27,8 +53,8 @@ export default function Home() {
           <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
             <SpotifyLoginButton />
             <p className="max-w-sm text-sm leading-6 text-mist/[0.62]">
-              Phase 1 sets up the experience. Spotify authorization arrives in
-              the next phase.
+              Sign in through Spotify to validate the OAuth flow before any
+              listening data is requested.
             </p>
           </div>
 
