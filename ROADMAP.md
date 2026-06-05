@@ -427,7 +427,6 @@ Create a social-sharing style identity card.
 Generate a compact visual card showing:
 
 * identity title
-* aura color
 * top artists
 * traits
 * listening vibe

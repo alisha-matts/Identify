@@ -77,6 +77,20 @@ Implemented:
 
 Final cinematic dashboard polish is intentionally not implemented until Phase 6.
 
+## Phase 6
+
+Implemented:
+
+- Cinematic identity hero card
+- Responsive glassmorphism dashboard layout
+- Trait breakdown bars
+- Listening profile section with radar and metric cards
+- Top artists panel
+- CSS-driven hover, glow, and motion effects
+
+Share/export features and code cleanup are intentionally not implemented until
+later phases.
+
 ## Local Setup
 
 Install dependencies:
