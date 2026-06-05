@@ -54,7 +54,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   if (topData) {
-    listeningProfile = getEstimatedListeningProfile(topData, timeframe);
+    listeningProfile = getEstimatedListeningProfile(topData);
   }
 
   return (
@@ -129,7 +129,7 @@ function AudioProfileSection({
           tracks, artists, popularity, and genre metadata.
         </p>
       </div>
-      <RadarCard profile={profile} />
+      <RadarCard profile={profile} timeframe={timeframe} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard label="Energy" value={profile.energy} />
         <MetricCard label="Valence" value={profile.valence} />
@@ -148,7 +148,13 @@ function AudioProfileSection({
   );
 }
 
-function RadarCard({ profile }: { profile: ListeningProfile }) {
+function RadarCard({
+  profile,
+  timeframe
+}: {
+  profile: ListeningProfile;
+  timeframe: Timeframe;
+}) {
   const radarMetrics = [
     { label: "Energy", value: profile.energy },
     { label: "Valence", value: profile.valence },
@@ -171,7 +177,7 @@ function RadarCard({ profile }: { profile: ListeningProfile }) {
         {profile.analyzedTrackCount} tracks analyzed
       </h2>
       <p className="mt-2 text-sm text-mist/[0.62]">
-        Source: Estimated from selected timeframe
+        Source: Estimated from {timeframeLabels[timeframe].toLowerCase()} data
       </p>
 
       <div className="mt-6 grid place-items-center">

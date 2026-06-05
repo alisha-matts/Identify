@@ -323,43 +323,7 @@ function uniqueRatio(values: string[]) {
   return new Set(values).size / values.length;
 }
 
-function timeframeProfileShift(timeframe: Timeframe) {
-  if (timeframe === "last-month") {
-    return {
-      acousticness: -0.03,
-      danceability: 0.04,
-      energy: 0.05,
-      instrumentalness: -0.01,
-      tempo: 5,
-      valence: 0.02
-    };
-  }
-
-  if (timeframe === "last-year") {
-    return {
-      acousticness: 0.05,
-      danceability: -0.02,
-      energy: -0.04,
-      instrumentalness: 0.03,
-      tempo: -4,
-      valence: -0.01
-    };
-  }
-
-  return {
-    acousticness: 0,
-    danceability: 0,
-    energy: 0,
-    instrumentalness: 0,
-    tempo: 0,
-    valence: 0
-  };
-}
-
-export function getEstimatedListeningProfile(
-  data: SpotifyTopData,
-  timeframe: Timeframe
-): ListeningProfile {
+export function getEstimatedListeningProfile(data: SpotifyTopData): ListeningProfile {
   const genres = data.artists.flatMap((artist) =>
     artist.genres.map((genre) => genre.toLowerCase())
   );
@@ -384,7 +348,6 @@ export function getEstimatedListeningProfile(
   );
   const averageDurationMinutes =
     average(data.tracks.map((track) => track.durationMs).filter(isNumber)) / 60000;
-  const shift = timeframeProfileShift(timeframe);
   const danceGenreScore = genreScore(genres, [
     "dance",
     "disco",
@@ -454,41 +417,36 @@ export function getEstimatedListeningProfile(
       energyGenreScore * 0.44 +
       popularity * 0.2 +
       trackSignature * 0.08 +
-      (1 - genreDiversity) * 0.05 +
-      shift.energy
+      (1 - genreDiversity) * 0.05
   );
   const danceability = clampMetric(
     0.2 +
       danceGenreScore * 0.5 +
       popularity * 0.15 +
       artistSignature * 0.08 +
-      artistDiversity * 0.05 +
-      shift.danceability
+      artistDiversity * 0.05
   );
   const acousticness = clampMetric(
     0.12 +
       acousticGenreScore * 0.58 +
       (1 - popularity) * 0.08 +
-      Math.min(averageDurationMinutes / 7, 1) * 0.07 +
-      shift.acousticness
+      Math.min(averageDurationMinutes / 7, 1) * 0.07
   );
   const instrumentalness = clampMetric(
     0.04 +
       instrumentalGenreScore * 0.54 +
       genreDiversity * 0.05 +
-      Math.max(averageDurationMinutes - 3, 0) * 0.025 +
-      shift.instrumentalness
+      Math.max(averageDurationMinutes - 3, 0) * 0.025
   );
   const valence = clampMetric(
     0.3 +
       brightGenreScore * 0.4 +
       popularity * 0.12 +
       trackSignature * 0.08 -
-      darkGenreScore * 0.3 +
-      shift.valence
+      darkGenreScore * 0.3
   );
   const tempo = Math.round(
-    70 + energy * 58 + danceability * 34 + (trackSignature - 0.5) * 14 + shift.tempo
+    70 + energy * 58 + danceability * 34 + (trackSignature - 0.5) * 14
   );
 
   return {
