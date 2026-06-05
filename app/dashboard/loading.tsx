@@ -8,6 +8,14 @@ export default function DashboardLoading() {
           <div className="mt-5 h-12 max-w-2xl rounded-lg bg-white/10" />
           <div className="mt-4 h-6 max-w-xl rounded-lg bg-white/10" />
         </div>
+        <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="h-96 rounded-[1.5rem] border border-white/10 bg-white/[0.055]" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div className="h-36 rounded-lg bg-white/[0.055]" key={index} />
+            ))}
+          </div>
+        </div>
         <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
           <div className="space-y-3 rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5">
             {Array.from({ length: 8 }).map((_, index) => (

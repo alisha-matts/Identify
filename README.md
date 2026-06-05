@@ -51,6 +51,20 @@ Implemented:
 Audio feature analysis and AI identity generation are intentionally not
 implemented until later phases.
 
+## Phase 4
+
+Implemented:
+
+- Estimated metrics for energy, valence, danceability, acousticness, tempo, and
+  instrumentalness
+- Listening profile summary
+- Radar chart visualization
+- Audio metric stat cards
+- Vibe metric labels
+
+Gemini and AI identity generation are intentionally not implemented until
+Phase 5.
+
 ## Local Setup
 
 Install dependencies:
