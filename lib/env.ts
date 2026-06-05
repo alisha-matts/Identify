@@ -31,3 +31,7 @@ export function getSpotifyCredentials() {
 export function getSpotifyRedirectUri() {
   return `${getBaseUrl()}${SPOTIFY_REDIRECT_PATH}`;
 }
+
+export function getGeminiApiKey() {
+  return process.env.GEMINI_API_KEY?.trim();
+}

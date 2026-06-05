@@ -65,6 +65,18 @@ Implemented:
 Gemini and AI identity generation are intentionally not implemented until
 Phase 5.
 
+## Phase 5
+
+Implemented:
+
+- Gemini identity generation using JSON mode
+- Prompt generation from listening profile, top tracks, and top artists
+- Identity name, description, three approved emotional traits, and vibe summary
+- Trait score mapping
+- Local heuristic fallback when Gemini is unavailable or invalid
+
+Final cinematic dashboard polish is intentionally not implemented until Phase 6.
+
 ## Local Setup
 
 Install dependencies:

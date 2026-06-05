@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
+  generateCachedListeningIdentity,
+  type ListeningIdentity
+} from "@/lib/identity";
+import {
   SPOTIFY_TOP_READ_SCOPE,
   SpotifyApiError,
   getEstimatedListeningProfile,
@@ -45,6 +49,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const timeframe = parseTimeframe(resolvedSearchParams?.timeframe);
   let topData: SpotifyTopData | null = null;
   let fetchError: SpotifyApiError | Error | null = null;
+  let identity: ListeningIdentity | null = null;
   let listeningProfile: ListeningProfile | null = null;
 
   try {
@@ -55,6 +60,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   if (topData) {
     listeningProfile = getEstimatedListeningProfile(topData);
+  }
+
+  if (topData && listeningProfile) {
+    identity = await generateCachedListeningIdentity({
+      artists: topData.artists,
+      profile: listeningProfile,
+      timeframe,
+      tracks: topData.tracks
+    });
   }
 
   return (
@@ -86,6 +100,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <SpotifyErrorNotice error={fetchError} />
         ) : null}
 
+        {identity ? (
+          <IdentitySection identity={identity} />
+        ) : null}
+
         {topData ? (
           <AudioProfileSection
             profile={listeningProfile}
@@ -101,6 +119,51 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         ) : null}
       </div>
     </main>
+  );
+}
+
+function IdentitySection({ identity }: { identity: ListeningIdentity }) {
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur sm:p-6">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+            Listening Identity
+          </p>
+          <h2 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-white [overflow-wrap:anywhere]">
+            {identity.identityName}
+          </h2>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-mist/[0.76] [overflow-wrap:anywhere]">
+            {identity.description}
+          </p>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-mist/[0.64] [overflow-wrap:anywhere]">
+            {identity.vibeSummary}
+          </p>
+        </div>
+        <span className="w-fit rounded-full border border-white/10 bg-ink/[0.48] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-mist/[0.68]">
+          {identity.source === "gemini" ? "Gemini" : "Local fallback"}
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-3 md:grid-cols-3">
+        {identity.traits.map((trait) => (
+          <div className="rounded-lg border border-white/10 bg-ink/[0.48] p-4" key={trait}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold text-white">{trait}</p>
+              <p className="text-sm font-medium text-mist/[0.62]">
+                {identity.traitScores[trait]}%
+              </p>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-pulse shadow-rose"
+                style={{ width: `${identity.traitScores[trait]}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
