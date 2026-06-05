@@ -80,15 +80,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.24em] text-signal/80">
-                Spotify Listening Data
+                Final Listening Identity
               </p>
               <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-white sm:text-5xl">
-                Your top tracks and artists.
+                A cinematic read on your Spotify rotation.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-mist/[0.72]">
-                Browse your current Spotify favorites by timeframe. This phase
-                estimates listening profile metrics from your top tracks,
-                artists, popularity, and genre metadata.
+                Switch timeframes to see your identity, traits, artists, and
+                listening profile rebuild around that slice of your taste.
               </p>
             </div>
 
@@ -100,53 +99,116 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <SpotifyErrorNotice error={fetchError} />
         ) : null}
 
-        {identity ? (
-          <IdentitySection identity={identity} />
-        ) : null}
-
-        {topData ? (
-          <AudioProfileSection
+        {topData && identity && listeningProfile ? (
+          <FinalIdentityDashboard
+            identity={identity}
             profile={listeningProfile}
             timeframe={timeframe}
+            topData={topData}
           />
-        ) : null}
-
-        {topData ? (
-          <section className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-            <TrackList tracks={topData.tracks} />
-            <ArtistGrid artists={topData.artists} />
-          </section>
         ) : null}
       </div>
     </main>
   );
 }
 
-function IdentitySection({ identity }: { identity: ListeningIdentity }) {
+function FinalIdentityDashboard({
+  identity,
+  profile,
+  timeframe,
+  topData
+}: {
+  identity: ListeningIdentity;
+  profile: ListeningProfile;
+  timeframe: Timeframe;
+  topData: SpotifyTopData;
+}) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur sm:p-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
-            Listening Identity
-          </p>
-          <h2 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-white [overflow-wrap:anywhere]">
+    <>
+      <IdentityHero
+        identity={identity}
+        timeframe={timeframe}
+      />
+
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <TraitBreakdown identity={identity} />
+        <ListeningVibe profile={profile} timeframe={timeframe} />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+        <ArtistGrid artists={topData.artists} />
+        <TrackList tracks={topData.tracks} />
+      </section>
+    </>
+  );
+}
+
+function IdentityHero({
+  identity,
+  timeframe
+}: {
+  identity: ListeningIdentity;
+  timeframe: Timeframe;
+}) {
+  return (
+    <section className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-ink/[0.62] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
+      <div className="absolute -right-28 -top-28 h-80 w-80 rounded-full bg-signal/20 blur-3xl" />
+      <div className="absolute inset-x-0 top-0 h-px animate-scan bg-gradient-to-r from-transparent via-signal to-transparent" />
+
+      <div className="relative">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+              Identity
+            </p>
+            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-medium text-mist/[0.72]">
+              {timeframeLabels[timeframe]}
+            </span>
+            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-medium text-mist/[0.72]">
+              {identity.source === "gemini" ? "Gemini" : "Local fallback"}
+            </span>
+          </div>
+
+          <h2 className="mt-5 max-w-4xl text-5xl font-semibold leading-[0.98] text-white [overflow-wrap:anywhere] sm:text-6xl">
             {identity.identityName}
           </h2>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-mist/[0.76] [overflow-wrap:anywhere]">
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-mist/[0.78] [overflow-wrap:anywhere]">
             {identity.description}
           </p>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-mist/[0.64] [overflow-wrap:anywhere]">
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-mist/[0.64] [overflow-wrap:anywhere]">
             {identity.vibeSummary}
           </p>
-        </div>
-        <span className="w-fit rounded-full border border-white/10 bg-ink/[0.48] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-mist/[0.68]">
-          {identity.source === "gemini" ? "Gemini" : "Local fallback"}
-        </span>
-      </div>
 
-      <div className="mt-6 grid gap-3 md:grid-cols-3">
-        {identity.traits.map((trait) => (
+          <div className="mt-7 flex flex-wrap gap-3">
+            {identity.traits.map((trait) => (
+              <span
+                className="rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-semibold text-white shadow-glow"
+                key={trait}
+              >
+                {trait}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TraitBreakdown({ identity }: { identity: ListeningIdentity }) {
+  const traits = [...identity.traits].sort(
+    (a, b) => identity.traitScores[b] - identity.traitScores[a]
+  );
+
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+        Trait Breakdown
+      </p>
+      <h3 className="mt-2 text-2xl font-semibold text-white">Emotional signal</h3>
+
+      <div className="mt-6 space-y-4">
+        {traits.map((trait) => (
           <div className="rounded-lg border border-white/10 bg-ink/[0.48] p-4" key={trait}>
             <div className="flex items-center justify-between gap-3">
               <p className="font-semibold text-white">{trait}</p>
@@ -156,12 +218,37 @@ function IdentitySection({ identity }: { identity: ListeningIdentity }) {
             </div>
             <div className="mt-3 h-2 rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-pulse shadow-rose"
+                className="h-full rounded-full bg-gradient-to-r from-pulse via-signal to-acid shadow-glow transition-all duration-700"
                 style={{ width: `${identity.traitScores[trait]}%` }}
               />
             </div>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function ListeningVibe({
+  profile,
+  timeframe
+}: {
+  profile: ListeningProfile;
+  timeframe: Timeframe;
+}) {
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+        Listening Vibe
+      </p>
+      <div className="mt-5 grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
+        <RadarCard profile={profile} timeframe={timeframe} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <MetricCard label="Energy" value={profile.energy} />
+          <MetricCard label="Valence" value={profile.valence} />
+          <MetricCard label="Danceability" value={profile.danceability} />
+          <MetricCard label="Acousticness" value={profile.acousticness} />
+        </div>
       </div>
     </section>
   );
@@ -206,7 +293,6 @@ function AudioProfileSection({
         />
         <MetricCard label="Instrumentalness" value={profile.instrumentalness} />
       </div>
-      <VibeMetrics profile={profile} />
     </section>
   );
 }
@@ -328,54 +414,6 @@ function MetricCard({
         />
       </div>
     </article>
-  );
-}
-
-function VibeMetrics({ profile }: { profile: ListeningProfile }) {
-  const vibes = [
-    {
-      label: "Momentum",
-      value:
-        profile.energy >= 0.65
-          ? "High charge"
-          : profile.energy >= 0.4
-            ? "Steady pulse"
-            : "Low-lit"
-    },
-    {
-      label: "Emotional color",
-      value:
-        profile.valence >= 0.65
-          ? "Bright"
-          : profile.valence >= 0.4
-            ? "Mixed"
-            : "Melancholic"
-    },
-    {
-      label: "Texture",
-      value:
-        profile.acousticness >= 0.55
-          ? "Organic"
-          : profile.instrumentalness >= 0.35
-            ? "Atmospheric"
-            : "Produced"
-    }
-  ];
-
-  return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur lg:col-start-2">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
-        Vibe Metrics
-      </p>
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        {vibes.map((vibe) => (
-          <div className="rounded-lg bg-ink/[0.48] p-4" key={vibe.label}>
-            <p className="text-sm text-mist/[0.62]">{vibe.label}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{vibe.value}</p>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -551,11 +589,6 @@ function ArtistGrid({ artists }: { artists: TopArtist[] }) {
             <span className="min-w-0">
               <span className="block truncate text-base font-semibold text-white">
                 {artist.name}
-              </span>
-              <span className="mt-1 block truncate text-sm text-mist/[0.64]">
-                {artist.genres.length > 0
-                  ? artist.genres.join(", ")
-                  : "No genre listed"}
               </span>
             </span>
           </a>
