@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   SPOTIFY_TOP_READ_SCOPE,
   SpotifyApiError,
+  getEstimatedListeningProfile,
   getSpotifyTopData,
   hasTopReadScope,
   parseTimeframe,
@@ -10,10 +11,14 @@ import {
   timeframes,
   type SpotifyTopData,
   type Timeframe,
+  type ListeningProfile,
   type TopArtist,
   type TopTrack
 } from "@/lib/spotify-api";
 import { getSpotifySession } from "@/lib/session";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type DashboardPageProps = {
   searchParams?:
@@ -40,11 +45,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const timeframe = parseTimeframe(resolvedSearchParams?.timeframe);
   let topData: SpotifyTopData | null = null;
   let fetchError: SpotifyApiError | Error | null = null;
+  let listeningProfile: ListeningProfile | null = null;
 
   try {
     topData = await getSpotifyTopData(session, timeframe);
   } catch (error) {
     fetchError = error instanceof Error ? error : new Error("Unknown Spotify error.");
+  }
+
+  if (topData) {
+    listeningProfile = getEstimatedListeningProfile(topData);
   }
 
   return (
@@ -63,8 +73,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-mist/[0.72]">
                 Browse your current Spotify favorites by timeframe. This phase
-                fetches listening data only, with no audio feature analysis or
-                AI identity generation.
+                estimates listening profile metrics from your top tracks,
+                artists, popularity, and genre metadata.
               </p>
             </div>
 
@@ -77,6 +87,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         ) : null}
 
         {topData ? (
+          <AudioProfileSection
+            profile={listeningProfile}
+            timeframe={timeframe}
+          />
+        ) : null}
+
+        {topData ? (
           <section className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
             <TrackList tracks={topData.tracks} />
             <ArtistGrid artists={topData.artists} />
@@ -85,6 +102,231 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </div>
     </main>
   );
+}
+
+function AudioProfileSection({
+  profile,
+  timeframe
+}: {
+  profile: ListeningProfile | null;
+  timeframe: Timeframe;
+}) {
+  if (!profile) {
+    return (
+      <section className="rounded-lg border border-white/10 bg-white/[0.055] p-5 text-sm leading-6 text-mist/[0.72]">
+        Listening profile metrics are not available for these top tracks yet.
+      </section>
+    );
+  }
+
+  return (
+    <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <div className="rounded-lg border border-signal/30 bg-signal/[0.1] p-5 text-sm leading-6 text-white lg:col-span-2">
+        <p className="font-semibold">Listening profile estimated</p>
+        <p className="mt-1 text-white/[0.76]">
+          Spotify no longer provides Audio Features to this app, so these metrics
+          are estimated from {timeframeLabels[timeframe].toLowerCase()}'s top
+          tracks, artists, popularity, and genre metadata.
+        </p>
+      </div>
+      <RadarCard profile={profile} timeframe={timeframe} />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <MetricCard label="Energy" value={profile.energy} />
+        <MetricCard label="Valence" value={profile.valence} />
+        <MetricCard label="Danceability" value={profile.danceability} />
+        <MetricCard label="Acousticness" value={profile.acousticness} />
+        <MetricCard
+          label="Tempo"
+          suffix=" BPM"
+          value={profile.tempo}
+          valueKind="tempo"
+        />
+        <MetricCard label="Instrumentalness" value={profile.instrumentalness} />
+      </div>
+      <VibeMetrics profile={profile} />
+    </section>
+  );
+}
+
+function RadarCard({
+  profile,
+  timeframe
+}: {
+  profile: ListeningProfile;
+  timeframe: Timeframe;
+}) {
+  const radarMetrics = [
+    { label: "Energy", value: profile.energy },
+    { label: "Valence", value: profile.valence },
+    { label: "Dance", value: profile.danceability },
+    { label: "Acoustic", value: profile.acousticness },
+    {
+      label: "Tempo",
+      value: Math.min(profile.tempo / 200, 1)
+    },
+    { label: "Instr.", value: profile.instrumentalness }
+  ];
+  const points = buildRadarPoints(radarMetrics.map((metric) => metric.value));
+
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur lg:row-span-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+        Listening Profile
+      </p>
+      <h2 className="mt-2 text-2xl font-semibold text-white">
+        {profile.analyzedTrackCount} tracks analyzed
+      </h2>
+      <p className="mt-2 text-sm text-mist/[0.62]">
+        Source: Estimated from {timeframeLabels[timeframe].toLowerCase()} data
+      </p>
+
+      <div className="mt-6 grid place-items-center">
+        <svg
+          aria-label="Estimated listening profile radar chart"
+          className="h-72 w-full max-w-sm"
+          role="img"
+          viewBox="0 0 240 240"
+        >
+          {[90, 65, 40].map((radius) => (
+            <polygon
+              className="fill-transparent stroke-white/10"
+              key={radius}
+              points={buildRadarPoints(Array(6).fill(1), radius)}
+              strokeWidth="1"
+            />
+          ))}
+          {radarMetrics.map((metric, index) => {
+            const angle = (Math.PI * 2 * index) / radarMetrics.length - Math.PI / 2;
+            const labelRadius = 108;
+            const x = 120 + Math.cos(angle) * labelRadius;
+            const y = 120 + Math.sin(angle) * labelRadius;
+
+            return (
+              <text
+                className="fill-mist text-[10px] font-semibold"
+                dominantBaseline="middle"
+                key={metric.label}
+                textAnchor="middle"
+                x={x}
+                y={y}
+              >
+                {metric.label}
+              </text>
+            );
+          })}
+          <polygon
+            className="fill-signal/20 stroke-signal"
+            points={points}
+            strokeLinejoin="round"
+            strokeWidth="2"
+          />
+          {points.split(" ").map((point) => {
+            const [x, y] = point.split(",");
+
+            return (
+              <circle
+                className="fill-white"
+                cx={x}
+                cy={y}
+                key={point}
+                r="3"
+              />
+            );
+          })}
+        </svg>
+      </div>
+    </section>
+  );
+}
+
+function MetricCard({
+  label,
+  suffix = "",
+  value,
+  valueKind = "ratio"
+}: {
+  label: string;
+  suffix?: string;
+  value: number;
+  valueKind?: "ratio" | "tempo";
+}) {
+  const displayValue =
+    valueKind === "tempo" ? `${value}${suffix}` : `${Math.round(value * 100)}%`;
+  const barValue = valueKind === "tempo" ? Math.min(value / 200, 1) : value;
+
+  return (
+    <article className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur">
+      <p className="text-sm text-mist/[0.62]">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-white">{displayValue}</p>
+      <div className="mt-4 h-2 rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-signal shadow-glow"
+          style={{ width: `${Math.round(barValue * 100)}%` }}
+        />
+      </div>
+    </article>
+  );
+}
+
+function VibeMetrics({ profile }: { profile: ListeningProfile }) {
+  const vibes = [
+    {
+      label: "Momentum",
+      value:
+        profile.energy >= 0.65
+          ? "High charge"
+          : profile.energy >= 0.4
+            ? "Steady pulse"
+            : "Low-lit"
+    },
+    {
+      label: "Emotional color",
+      value:
+        profile.valence >= 0.65
+          ? "Bright"
+          : profile.valence >= 0.4
+            ? "Mixed"
+            : "Melancholic"
+    },
+    {
+      label: "Texture",
+      value:
+        profile.acousticness >= 0.55
+          ? "Organic"
+          : profile.instrumentalness >= 0.35
+            ? "Atmospheric"
+            : "Produced"
+    }
+  ];
+
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur lg:col-start-2">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+        Vibe Metrics
+      </p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        {vibes.map((vibe) => (
+          <div className="rounded-lg bg-ink/[0.48] p-4" key={vibe.label}>
+            <p className="text-sm text-mist/[0.62]">{vibe.label}</p>
+            <p className="mt-2 text-lg font-semibold text-white">{vibe.value}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function buildRadarPoints(values: number[], radius = 90) {
+  return values
+    .map((value, index) => {
+      const angle = (Math.PI * 2 * index) / values.length - Math.PI / 2;
+      const scaledRadius = Math.max(0, Math.min(value, 1)) * radius;
+      const x = 120 + Math.cos(angle) * scaledRadius;
+      const y = 120 + Math.sin(angle) * scaledRadius;
+
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
 }
 
 function SpotifyErrorNotice({ error }: { error: Error }) {
@@ -158,7 +400,7 @@ function TimeframeSelector({
         const isActive = timeframe === activeTimeframe;
 
         return (
-          <Link
+          <a
             aria-current={isActive ? "page" : undefined}
             className={[
               "rounded-md px-4 py-2.5 text-center text-sm font-semibold transition",
@@ -170,7 +412,7 @@ function TimeframeSelector({
             key={timeframe}
           >
             {timeframeLabels[timeframe]}
-          </Link>
+          </a>
         );
       })}
     </nav>

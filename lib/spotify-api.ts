@@ -114,6 +114,18 @@ export type SpotifyTopData = {
   tracks: TopTrack[];
 };
 
+export type AudioMetricKey =
+  | "energy"
+  | "valence"
+  | "danceability"
+  | "acousticness"
+  | "tempo"
+  | "instrumentalness";
+
+export type ListeningProfile = Record<AudioMetricKey, number> & {
+  analyzedTrackCount: number;
+};
+
 export function parseTimeframe(value?: string): Timeframe {
   if (value && timeframes.includes(value as Timeframe)) {
     return value as Timeframe;
@@ -151,7 +163,8 @@ function getArtistNames(artists?: SpotifyArtistSummary[]) {
 async function spotifyFetch<T>(
   session: SpotifySession,
   path: string,
-  params: Record<string, string>
+  params: Record<string, string>,
+  attempt = 0
 ) {
   const url = new URL(`${SPOTIFY_API_URL}${path}`);
 
@@ -165,6 +178,18 @@ async function spotifyFetch<T>(
     },
     cache: "no-store"
   });
+
+  if (response.status === 429 && attempt < 3) {
+    const retryAfterSeconds = Number(response.headers.get("Retry-After") ?? "1");
+    const retryAfterMs = Number.isFinite(retryAfterSeconds)
+      ? retryAfterSeconds * 1000
+      : 1000;
+    const backoffMs = Math.max(retryAfterMs, 2 ** attempt * 500);
+
+    await new Promise((resolve) => setTimeout(resolve, backoffMs));
+
+    return spotifyFetch<T>(session, path, params, attempt + 1);
+  }
 
   if (!response.ok) {
     let message = `Spotify API request failed with status ${response.status}.`;
@@ -222,5 +247,215 @@ export async function getSpotifyTopData(
       popularity: artist.popularity ?? 0,
       spotifyUrl: getSpotifyUrl(artist.external_urls)
     }))
+  };
+}
+
+function average(values: number[]) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function weightedAverage(values: number[]) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  let total = 0;
+  let weightTotal = 0;
+
+  values.forEach((value, index) => {
+    const weight = 1 / (index + 1);
+    total += value * weight;
+    weightTotal += weight;
+  });
+
+  return total / weightTotal;
+}
+
+function roundedMetric(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function clampMetric(value: number) {
+  return Math.max(0, Math.min(1, roundedMetric(value)));
+}
+
+function genreScore(genres: string[], keywords: string[]) {
+  if (genres.length === 0) {
+    return 0.35;
+  }
+
+  const matches = genres.filter((genre) =>
+    keywords.some((keyword) => genre.includes(keyword))
+  ).length;
+
+  return matches / genres.length;
+}
+
+function normalizedTextHash(values: string[]) {
+  const text = values.join("|");
+
+  if (!text) {
+    return 0.5;
+  }
+
+  let hash = 0;
+
+  for (let index = 0; index < text.length; index += 1) {
+    hash = (hash * 31 + text.charCodeAt(index)) % 10000;
+  }
+
+  return hash / 10000;
+}
+
+function uniqueRatio(values: string[]) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return new Set(values).size / values.length;
+}
+
+export function getEstimatedListeningProfile(data: SpotifyTopData): ListeningProfile {
+  const genres = data.artists.flatMap((artist) =>
+    artist.genres.map((genre) => genre.toLowerCase())
+  );
+  const trackPopularity = weightedAverage(
+    data.tracks.map((track) => track.popularity / 100)
+  );
+  const artistPopularity = weightedAverage(
+    data.artists.map((artist) => artist.popularity / 100)
+  );
+  const popularity = average([trackPopularity, artistPopularity].filter(isNumber));
+  const trackSignature = normalizedTextHash(
+    data.tracks.map((track) => `${track.id}:${track.name}:${track.artistNames}`)
+  );
+  const artistSignature = normalizedTextHash(
+    data.artists.map((artist) => `${artist.id}:${artist.name}`)
+  );
+  const genreDiversity = uniqueRatio(genres);
+  const artistDiversity = uniqueRatio(
+    data.tracks.flatMap((track) =>
+      track.artistNames.split(",").map((artistName) => artistName.trim())
+    )
+  );
+  const averageDurationMinutes =
+    average(data.tracks.map((track) => track.durationMs).filter(isNumber)) / 60000;
+  const danceGenreScore = genreScore(genres, [
+    "dance",
+    "disco",
+    "edm",
+    "funk",
+    "house",
+    "hip hop",
+    "latin",
+    "pop",
+    "r&b",
+    "rap",
+    "reggaeton"
+  ]);
+  const energyGenreScore = genreScore(genres, [
+    "dance",
+    "edm",
+    "electronic",
+    "hardcore",
+    "house",
+    "metal",
+    "pop",
+    "punk",
+    "rap",
+    "rock",
+    "techno",
+    "trap"
+  ]);
+  const acousticGenreScore = genreScore(genres, [
+    "acoustic",
+    "classical",
+    "country",
+    "folk",
+    "indie folk",
+    "jazz",
+    "singer-songwriter"
+  ]);
+  const instrumentalGenreScore = genreScore(genres, [
+    "ambient",
+    "classical",
+    "instrumental",
+    "jazz",
+    "lo-fi",
+    "post-rock",
+    "score",
+    "soundtrack"
+  ]);
+  const brightGenreScore = genreScore(genres, [
+    "dance",
+    "disco",
+    "funk",
+    "latin",
+    "pop",
+    "reggae",
+    "soul",
+    "tropical"
+  ]);
+  const darkGenreScore = genreScore(genres, [
+    "emo",
+    "goth",
+    "grunge",
+    "melancholia",
+    "metal",
+    "sad"
+  ]);
+  const energy = clampMetric(
+    0.2 +
+      energyGenreScore * 0.44 +
+      popularity * 0.2 +
+      trackSignature * 0.08 +
+      (1 - genreDiversity) * 0.05
+  );
+  const danceability = clampMetric(
+    0.2 +
+      danceGenreScore * 0.5 +
+      popularity * 0.15 +
+      artistSignature * 0.08 +
+      artistDiversity * 0.05
+  );
+  const acousticness = clampMetric(
+    0.12 +
+      acousticGenreScore * 0.58 +
+      (1 - popularity) * 0.08 +
+      Math.min(averageDurationMinutes / 7, 1) * 0.07
+  );
+  const instrumentalness = clampMetric(
+    0.04 +
+      instrumentalGenreScore * 0.54 +
+      genreDiversity * 0.05 +
+      Math.max(averageDurationMinutes - 3, 0) * 0.025
+  );
+  const valence = clampMetric(
+    0.3 +
+      brightGenreScore * 0.4 +
+      popularity * 0.12 +
+      trackSignature * 0.08 -
+      darkGenreScore * 0.3
+  );
+  const tempo = Math.round(
+    70 + energy * 58 + danceability * 34 + (trackSignature - 0.5) * 14
+  );
+
+  return {
+    energy,
+    valence,
+    danceability,
+    acousticness,
+    tempo,
+    instrumentalness,
+    analyzedTrackCount: data.tracks.length
   };
 }

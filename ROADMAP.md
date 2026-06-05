@@ -293,7 +293,7 @@ Gemini should return:
 
 * identity name
 * short description
-* emotional traits
+* 3 emotional traits
 * vibe summary
 
 Examples:
@@ -307,22 +307,25 @@ Responses should:
 * avoid generic moods
 * feel emotional/aesthetic
 * be concise
+* use JSON
 
-## Hybrid System
-
-After AI generation:
-map result into predefined archetypes.
-
-Example archetypes:
+## Traits must come from this list:
 
 * Dreamy
 * Romantic
-* Chaotic
-* Introspective
 * Nostalgic
 * Melancholic
-
-Create trait scores.
+* Energetic
+* Chaotic
+* Confident
+* Introspective
+* Cinematic
+* Euphoric
+* Rebellious
+* Playful
+* Focused
+* Adventurous
+* Warm
 
 ## Fallback System
 
@@ -335,7 +338,6 @@ Generate:
 
 * Gemini API utility
 * AI prompt logic
-* archetype mapping
 * fallback logic
 * typed AI responses
 
@@ -345,7 +347,6 @@ Before continuing:
 
 * Gemini responses work
 * identities feel unique
-* archetype mapping works
 * fallback logic works
 * no API crashes
 
