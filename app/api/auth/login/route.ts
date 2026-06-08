@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createSpotifyAuthorizationUrl } from "@/lib/spotify-auth";
 import {
   SPOTIFY_STATE_COOKIE,
@@ -8,7 +8,14 @@ import {
 
 export const runtime = "nodejs";
 
-export function GET() {
+function redirectWithAuthError(request: NextRequest, error: string) {
+  const redirectUrl = new URL("/", request.nextUrl.origin);
+  redirectUrl.searchParams.set("auth_error", error);
+
+  return NextResponse.redirect(redirectUrl);
+}
+
+export function GET(request: NextRequest) {
   try {
     const state = createState();
     const response = NextResponse.redirect(createSpotifyAuthorizationUrl(state));
@@ -16,12 +23,7 @@ export function GET() {
     response.cookies.set(SPOTIFY_STATE_COOKIE, state, getStateCookieOptions());
 
     return response;
-  } catch (error) {
-    const redirectUrl = new URL(
-      "/?auth_error=missing_spotify_configuration",
-      "http://127.0.0.1:3000"
-    );
-
-    return NextResponse.redirect(redirectUrl);
+  } catch {
+    return redirectWithAuthError(request, "missing_spotify_configuration");
   }
 }

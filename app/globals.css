@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  background: #08070f;
+  color-scheme: light;
+  background: #fff8fb;
 }
 
 * {
@@ -20,10 +20,12 @@ body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at 15% 0%, rgba(255, 79, 135, 0.22), transparent 34rem),
-    radial-gradient(circle at 85% 8%, rgba(114, 232, 255, 0.18), transparent 30rem),
-    linear-gradient(135deg, #08070f 0%, #12101f 48%, #090712 100%);
-  color: #f6f2ff;
+    linear-gradient(120deg, rgba(255, 255, 226, 0.92) 0%, transparent 34%),
+    linear-gradient(215deg, rgba(213, 255, 128, 0.64) 0%, transparent 38%),
+    linear-gradient(45deg, rgba(255, 188, 227, 0.7) 0%, transparent 44%),
+    linear-gradient(150deg, rgba(196, 235, 255, 0.72) 0%, transparent 46%),
+    linear-gradient(135deg, #fff8fb 0%, #f7d8fb 48%, #ecffd2 100%);
+  color: #3f3947;
 }
 
 body::before {
@@ -32,23 +34,21 @@ body::before {
   z-index: -1;
   pointer-events: none;
   content: "";
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(to bottom, black, transparent 80%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 55%);
 }
 
 ::selection {
-  background: rgba(185, 255, 102, 0.35);
-  color: #ffffff;
+  background: rgba(255, 240, 106, 0.55);
+  color: #190f38;
 }
 
 .glass-panel {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(14, 12, 26, 0.68);
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow:
+    0 24px 80px rgba(160, 130, 178, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(24px);
 }
 
 .text-balance {
