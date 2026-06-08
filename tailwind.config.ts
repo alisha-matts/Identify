@@ -8,16 +8,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#08070f",
-        night: "#12101f",
-        mist: "#d7d5e7",
-        acid: "#b9ff66",
-        pulse: "#ff4f87",
-        signal: "#72e8ff"
+        ink: "#3f3947",
+        night: "#ffffff",
+        mist: "#6d6374",
+        acid: "#c8ef5f",
+        pulse: "#f3a6d6",
+        signal: "#91dff1"
       },
       boxShadow: {
-        glow: "0 0 36px rgba(114, 232, 255, 0.22)",
-        rose: "0 0 46px rgba(255, 79, 135, 0.2)"
+        glow: "0 18px 48px rgba(145, 223, 241, 0.22)",
+        rose: "0 18px 48px rgba(243, 166, 214, 0.22)"
       },
       keyframes: {
         float: {

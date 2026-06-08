@@ -75,21 +75,44 @@ Implemented:
 - Trait score mapping
 - Local heuristic fallback when Gemini is unavailable or invalid
 
-Final cinematic dashboard polish is intentionally not implemented until Phase 6.
+Final dashboard polish is intentionally not implemented until Phase 6.
 
 ## Phase 6
 
 Implemented:
 
-- Cinematic identity hero card
+- Soft identity hero card
 - Responsive glassmorphism dashboard layout
+- Three-tab dashboard organization for identity, listening profile, and source data
 - Trait breakdown bars
 - Listening profile section with radar and metric cards
 - Top artists panel
 - CSS-driven hover, glow, and motion effects
 
-Share/export features and code cleanup are intentionally not implemented until
-later phases.
+Code cleanup and production readiness are intentionally not implemented until
+Phase 8.
+
+## Phase 7
+
+Implemented:
+
+- Shareable social-style identity card
+- Compact card layout with identity title, top artist, top song, traits, and listening vibe
+- SVG card download
+- Native share support with clipboard fallback
+- Responsive dashboard placement
+
+## Phase 8
+
+Implemented:
+
+- Production-safe environment validation
+- Local and production Spotify redirect URL support
+- App-level, dashboard-level, and not-found error states
+- Accessible loading state semantics
+- Keyboard-accessible dashboard tabs
+- Environment variable documentation and example file
+- Final TypeScript and production build verification
 
 ## Local Setup
 
@@ -112,3 +135,53 @@ http://127.0.0.1:3000
 ```
 
 Do not use `localhost` for this project.
+
+## Environment Variables
+
+Create `.env.local` from `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+Required values:
+
+```text
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+NEXT_PUBLIC_BASE_URL=http://127.0.0.1:3000
+GEMINI_API_KEY=
+```
+
+For local development, `NEXT_PUBLIC_BASE_URL` must be:
+
+```text
+http://127.0.0.1:3000
+```
+
+For production, `NEXT_PUBLIC_BASE_URL` must be the deployed HTTPS origin, for
+example:
+
+```text
+https://your-domain.com
+```
+
+Add the matching Spotify redirect URI in the Spotify Developer Dashboard:
+
+```text
+https://your-domain.com/api/auth/callback/spotify
+```
+
+Do not use `localhost` in Spotify redirect URIs.
+
+## Production Check
+
+Before deploying:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+Confirm the production Spotify app has the exact deployed callback URL and that
+all environment variables are set in the hosting provider.

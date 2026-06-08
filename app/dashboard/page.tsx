@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DashboardTabs } from "@/components/dashboard-tabs";
+import { ShareIdentityCard } from "@/components/share-identity-card";
 import {
   generateCachedListeningIdentity,
   type ListeningIdentity
@@ -79,15 +81,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <section className="glass-panel rounded-[2rem] p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-signal/80">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-ink/70">
                 Final Listening Identity
               </p>
-              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-white sm:text-5xl">
-                A cinematic read on your Spotify rotation.
+              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight text-ink sm:text-5xl">
+                A colorful read on your Spotify rotation.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-mist/[0.72]">
                 Switch timeframes to see your identity, traits, artists, and
-                listening profile rebuild around that slice of your taste.
+                listening profile light up around that slice of your taste.
               </p>
             </div>
 
@@ -124,22 +126,45 @@ function FinalIdentityDashboard({
   topData: SpotifyTopData;
 }) {
   return (
-    <>
-      <IdentityHero
-        identity={identity}
-        timeframe={timeframe}
-      />
-
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <TraitBreakdown identity={identity} />
-        <ListeningVibe profile={profile} timeframe={timeframe} />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <ArtistGrid artists={topData.artists} />
-        <TrackList tracks={topData.tracks} />
-      </section>
-    </>
+    <DashboardTabs
+      tabs={[
+        {
+          id: "identity",
+          label: "Identity + Share",
+          content: (
+            <>
+              <IdentityHero identity={identity} timeframe={timeframe} />
+              <ShareIdentityCard
+                artists={topData.artists}
+                identity={identity}
+                timeframeLabel={timeframeLabels[timeframe]}
+                tracks={topData.tracks}
+              />
+            </>
+          )
+        },
+        {
+          id: "profile",
+          label: "Traits + Profile",
+          content: (
+            <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+              <TraitBreakdown identity={identity} />
+              <ListeningVibe profile={profile} timeframe={timeframe} />
+            </section>
+          )
+        },
+        {
+          id: "source",
+          label: "Artists + Tracks",
+          content: (
+            <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+              <ArtistGrid artists={topData.artists} />
+              <TrackList tracks={topData.tracks} />
+            </section>
+          )
+        }
+      ]}
+    />
   );
 }
 
@@ -151,25 +176,22 @@ function IdentityHero({
   timeframe: Timeframe;
 }) {
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-ink/[0.62] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
-      <div className="absolute -right-28 -top-28 h-80 w-80 rounded-full bg-signal/20 blur-3xl" />
-      <div className="absolute inset-x-0 top-0 h-px animate-scan bg-gradient-to-r from-transparent via-signal to-transparent" />
-
-      <div className="relative">
+    <section className="overflow-hidden rounded-[1.5rem] border border-white/70 bg-white/[0.62] p-6 shadow-[0_18px_56px_rgba(120,95,130,0.14)] backdrop-blur-xl sm:p-8">
+      <div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist">
               Identity
             </p>
-            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-medium text-mist/[0.72]">
+            <span className="rounded-full border border-ink/10 bg-white/60 px-3 py-1 text-xs font-medium text-mist">
               {timeframeLabels[timeframe]}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-medium text-mist/[0.72]">
+            <span className="rounded-full border border-ink/10 bg-white/60 px-3 py-1 text-xs font-medium text-mist">
               {identity.source === "gemini" ? "Gemini" : "Local fallback"}
             </span>
           </div>
 
-          <h2 className="mt-5 max-w-4xl text-5xl font-semibold leading-[0.98] text-white [overflow-wrap:anywhere] sm:text-6xl">
+          <h2 className="mt-5 max-w-4xl text-5xl font-semibold leading-[0.98] text-ink [overflow-wrap:anywhere] sm:text-6xl">
             {identity.identityName}
           </h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-mist/[0.78] [overflow-wrap:anywhere]">
@@ -182,7 +204,7 @@ function IdentityHero({
           <div className="mt-7 flex flex-wrap gap-3">
             {identity.traits.map((trait) => (
               <span
-                className="rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-semibold text-white shadow-glow"
+                className="rounded-full border border-ink/10 bg-white/70 px-4 py-2 text-sm font-semibold text-ink"
                 key={trait}
               >
                 {trait}
@@ -201,24 +223,24 @@ function TraitBreakdown({ identity }: { identity: ListeningIdentity }) {
   );
 
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur sm:p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+    <section className="rounded-[1.25rem] border border-white/70 bg-white/[0.62] p-5 shadow-[0_18px_48px_rgba(120,95,130,0.12)] backdrop-blur sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist">
         Trait Breakdown
       </p>
-      <h3 className="mt-2 text-2xl font-semibold text-white">Emotional signal</h3>
+      <h3 className="mt-2 text-2xl font-semibold text-ink">Emotional signal</h3>
 
       <div className="mt-6 space-y-4">
         {traits.map((trait) => (
-          <div className="rounded-lg border border-white/10 bg-ink/[0.48] p-4" key={trait}>
+          <div className="rounded-lg border border-ink/10 bg-white/65 p-4" key={trait}>
             <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-white">{trait}</p>
+              <p className="font-semibold text-ink">{trait}</p>
               <p className="text-sm font-medium text-mist/[0.62]">
                 {identity.traitScores[trait]}%
               </p>
             </div>
-            <div className="mt-3 h-2 rounded-full bg-white/10">
+            <div className="mt-3 h-2 rounded-full bg-ink/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-pulse via-signal to-acid shadow-glow transition-all duration-700"
+                className="h-full rounded-full bg-gradient-to-r from-pulse via-signal to-acid transition-all duration-700"
                 style={{ width: `${identity.traitScores[trait]}%` }}
               />
             </div>
@@ -237,9 +259,9 @@ function ListeningVibe({
   timeframe: Timeframe;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur sm:p-6">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
-        Listening Vibe
+    <section className="rounded-[1.25rem] border border-white/70 bg-white/[0.62] p-5 shadow-[0_18px_48px_rgba(120,95,130,0.12)] backdrop-blur sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist">
+        Listening Profile
       </p>
       <div className="mt-5 grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
         <RadarCard profile={profile} timeframe={timeframe} />
@@ -248,6 +270,13 @@ function ListeningVibe({
           <MetricCard label="Valence" value={profile.valence} />
           <MetricCard label="Danceability" value={profile.danceability} />
           <MetricCard label="Acousticness" value={profile.acousticness} />
+          <MetricCard
+            label="Tempo"
+            suffix=" BPM"
+            value={profile.tempo}
+            valueKind="tempo"
+          />
+          <MetricCard label="Instrumentalness" value={profile.instrumentalness} />
         </div>
       </div>
     </section>
@@ -263,7 +292,7 @@ function AudioProfileSection({
 }) {
   if (!profile) {
     return (
-      <section className="rounded-lg border border-white/10 bg-white/[0.055] p-5 text-sm leading-6 text-mist/[0.72]">
+      <section className="rounded-lg border border-white/70 bg-white/[0.62] p-5 text-sm leading-6 text-mist/[0.78]">
         Listening profile metrics are not available for these top tracks yet.
       </section>
     );
@@ -271,16 +300,16 @@ function AudioProfileSection({
 
   return (
     <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-      <div className="rounded-lg border border-signal/30 bg-signal/[0.1] p-5 text-sm leading-6 text-white lg:col-span-2">
+      <div className="rounded-lg border border-signal/30 bg-signal/[0.1] p-5 text-sm leading-6 text-ink lg:col-span-2">
         <p className="font-semibold">Listening profile estimated</p>
-        <p className="mt-1 text-white/[0.76]">
+        <p className="mt-1 text-ink/[0.76]">
           Spotify no longer provides Audio Features to this app, so these metrics
           are estimated from {timeframeLabels[timeframe].toLowerCase()}'s top
           tracks, artists, popularity, and genre metadata.
         </p>
       </div>
       <RadarCard profile={profile} timeframe={timeframe} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <MetricCard label="Energy" value={profile.energy} />
         <MetricCard label="Valence" value={profile.valence} />
         <MetricCard label="Danceability" value={profile.danceability} />
@@ -318,11 +347,8 @@ function RadarCard({
   const points = buildRadarPoints(radarMetrics.map((metric) => metric.value));
 
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-5 backdrop-blur lg:row-span-2">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
-        Listening Profile
-      </p>
-      <h2 className="mt-2 text-2xl font-semibold text-white">
+    <section className="rounded-[1.25rem] border border-ink/10 bg-white/65 p-5 backdrop-blur lg:row-span-2">
+      <h2 className="text-2xl font-semibold text-ink">
         {profile.analyzedTrackCount} tracks analyzed
       </h2>
       <p className="mt-2 text-sm text-mist/[0.62]">
@@ -338,7 +364,7 @@ function RadarCard({
         >
           {[90, 65, 40].map((radius) => (
             <polygon
-              className="fill-transparent stroke-white/10"
+              className="fill-transparent stroke-ink/10"
               key={radius}
               points={buildRadarPoints(Array(6).fill(1), radius)}
               strokeWidth="1"
@@ -374,7 +400,7 @@ function RadarCard({
 
             return (
               <circle
-                className="fill-white"
+                className="fill-ink"
                 cx={x}
                 cy={y}
                 key={point}
@@ -404,12 +430,14 @@ function MetricCard({
   const barValue = valueKind === "tempo" ? Math.min(value / 200, 1) : value;
 
   return (
-    <article className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur">
-      <p className="text-sm text-mist/[0.62]">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-white">{displayValue}</p>
-      <div className="mt-4 h-2 rounded-full bg-white/10">
+    <article className="rounded-lg border border-ink/10 bg-white/65 p-5 backdrop-blur">
+      <p className="text-sm leading-5 text-mist/[0.62] [overflow-wrap:anywhere]">
+        {label}
+      </p>
+      <p className="mt-2 text-3xl font-semibold text-ink">{displayValue}</p>
+      <div className="mt-4 h-2 rounded-full bg-ink/10">
         <div
-          className="h-full rounded-full bg-signal shadow-glow"
+          className="h-full rounded-full bg-signal"
           style={{ width: `${Math.round(barValue * 100)}%` }}
         />
       </div>
@@ -444,13 +472,13 @@ function SpotifyErrorNotice({ error }: { error: Error }) {
     : error.message;
 
   return (
-    <section className="rounded-lg border border-pulse/40 bg-pulse/[0.12] p-5 text-sm leading-6 text-white">
+    <section className="rounded-lg border border-pulse/40 bg-pulse/[0.12] p-5 text-sm leading-6 text-ink">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="font-semibold">{title}</p>
-          <p className="mt-1 text-white/[0.76]">{detail}</p>
+          <p className="mt-1 text-ink/[0.76]">{detail}</p>
           {isAuthError ? (
-            <p className="mt-2 text-white/[0.68]">
+            <p className="mt-2 text-ink/[0.68]">
               Reconnect Spotify and approve the{" "}
               <code className="rounded bg-white/10 px-1.5 py-0.5">
                 {SPOTIFY_TOP_READ_SCOPE}
@@ -474,13 +502,16 @@ function DashboardHeader() {
   return (
     <header className="flex flex-col gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-center sm:justify-between">
       <Link className="flex items-center gap-3" href="/">
-        <span className="grid h-10 w-10 place-items-center rounded-lg bg-white text-base font-black text-ink">
-          ID
+        <span
+          aria-hidden="true"
+          className="grid h-10 w-10 place-items-center rounded-lg bg-white text-2xl"
+        >
+          {"\u{1F481}\u200D\u2640\uFE0F"}
         </span>
-        <span className="text-lg font-semibold text-white">Identify</span>
+        <span className="text-lg font-semibold text-ink">Identify</span>
       </Link>
 
-      <span className="w-fit rounded-full border border-[#1ed760]/40 bg-[#1ed760]/10 px-4 py-2 text-sm font-medium text-[#8bf6ad]">
+      <span className="w-fit rounded-full border border-ink/10 bg-white/70 px-4 py-2 text-sm font-semibold text-ink">
         Spotify connected
       </span>
     </header>
@@ -507,7 +538,7 @@ function TimeframeSelector({
               "rounded-md px-4 py-2.5 text-center text-sm font-semibold transition",
               isActive
                 ? "bg-white text-ink"
-                : "text-mist/[0.72] hover:bg-white/[0.08] hover:text-white"
+                : "text-mist/[0.72] hover:bg-white/[0.08] hover:text-ink"
             ].join(" ")}
             href={`/dashboard?timeframe=${timeframe}`}
             key={timeframe}
@@ -522,20 +553,20 @@ function TimeframeSelector({
 
 function TrackList({ tracks }: { tracks: TopTrack[] }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur sm:p-5">
+    <section className="rounded-[1.25rem] border border-white/70 bg-white/[0.62] p-4 shadow-[0_18px_48px_rgba(120,95,130,0.12)] backdrop-blur sm:p-5">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist">
             Top Tracks
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">25 tracks</h2>
+          <h2 className="mt-2 text-2xl font-semibold text-ink">25 tracks</h2>
         </div>
       </div>
 
       <div className="space-y-3">
         {tracks.map((track, index) => (
           <a
-            className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-lg border border-white/10 bg-ink/[0.48] p-3 transition hover:border-signal/40 hover:bg-white/[0.075]"
+            className="grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-lg border border-ink/10 bg-white/65 p-3 transition hover:bg-white"
             href={track.spotifyUrl}
             key={track.id}
             rel="noreferrer"
@@ -547,7 +578,7 @@ function TrackList({ tracks }: { tracks: TopTrack[] }) {
             <span className="flex min-w-0 items-center gap-3">
               <Artwork alt={`${track.name} album artwork`} src={track.imageUrl} />
               <span className="min-w-0">
-                <span className="block truncate text-base font-semibold text-white">
+                <span className="block truncate text-base font-semibold text-ink">
                   {track.name}
                 </span>
                 <span className="mt-1 block truncate text-sm text-mist/[0.64]">
@@ -567,16 +598,16 @@ function TrackList({ tracks }: { tracks: TopTrack[] }) {
 
 function ArtistGrid({ artists }: { artists: TopArtist[] }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur sm:p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-acid/80">
+    <section className="rounded-[1.25rem] border border-white/70 bg-white/[0.62] p-4 shadow-[0_18px_48px_rgba(120,95,130,0.12)] backdrop-blur sm:p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mist">
         Top Artists
       </p>
-      <h2 className="mt-2 text-2xl font-semibold text-white">15 artists</h2>
+      <h2 className="mt-2 text-2xl font-semibold text-ink">15 artists</h2>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         {artists.map((artist, index) => (
           <a
-            className="flex min-w-0 items-center gap-3 rounded-lg border border-white/10 bg-ink/[0.48] p-3 transition hover:border-pulse/40 hover:bg-white/[0.075]"
+            className="flex min-w-0 items-center gap-3 rounded-lg border border-ink/10 bg-white/65 p-3 transition hover:bg-white"
             href={artist.spotifyUrl}
             key={artist.id}
             rel="noreferrer"
@@ -587,7 +618,7 @@ function ArtistGrid({ artists }: { artists: TopArtist[] }) {
             </span>
             <Artwork alt={`${artist.name} artist image`} src={artist.imageUrl} />
             <span className="min-w-0">
-              <span className="block truncate text-base font-semibold text-white">
+              <span className="block truncate text-base font-semibold text-ink">
                 {artist.name}
               </span>
             </span>
@@ -603,10 +634,10 @@ function Artwork({ alt, src }: { alt: string; src?: string }) {
     return (
       <span
         aria-label={alt}
-        className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-signal/40 via-pulse/30 to-acid/30 text-sm font-black text-white"
+        className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-signal/40 via-pulse/30 to-acid/30 text-2xl"
         role="img"
       >
-        ID
+        {"\u{1F481}\u200D\u2640\uFE0F"}
       </span>
     );
   }

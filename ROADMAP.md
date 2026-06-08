@@ -466,31 +466,21 @@ Prepare app for deployment.
 * environment validation
 * loading states
 * error handling
-* API rate-limit handling
 * responsive QA
 * accessibility improvements
-
-## Deployment
-
-Prepare for:
-
-* AWS amplify deployment
 
 ## Deliverables
 
 Generate:
 
 * production-ready cleanup
-* optimized API calls
 * final folder cleanup
-* deployment instructions
 
 ## Final Test Checklist
 
 * no TypeScript errors
 * production build succeeds
 * OAuth works in production
-* responsive on mobile
 * no console errors
 * environment variables documented
 
